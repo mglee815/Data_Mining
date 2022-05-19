@@ -19,6 +19,8 @@ def Generate_train_test_data(n_sample):
     train = pd.concat([train_df1, train_df2])
     train.reset_index(inplace = True, drop = True)
     train.columns = ["X1", "X2", "class"]
+    train = train.sample(frac = 1).reset_index(drop = True)
+    
     
     #generate test data set
     test_data1 = np.random.multivariate_normal((1, 0), [[1, 0.75], [0.75, 1]], 200)
@@ -32,6 +34,8 @@ def Generate_train_test_data(n_sample):
     test = pd.concat([test_df1, test_df2])
     test.reset_index(inplace = True, drop = True)
     test.columns = ["X1", "X2", "class"]
+    test = test.sample(frac = 1).reset_index(drop = True)
+    
     
     X_train = np.array(train.iloc[:, [0, 1]])
     Y_train = np.array(train['class'])
@@ -124,10 +128,10 @@ def Create_Confusion_matrix(prediction, label):
         else:
             #It is TN
             if label[i] == 1:
-                confusion_matrix[1][0] += 1
+                confusion_matrix[0][1] += 1
             #of FP
             else:
-                confusion_matrix[0][1] += 1
+                confusion_matrix[1][0] += 1
     return confusion_matrix
 
 #Calculate precision,recall, accuracy

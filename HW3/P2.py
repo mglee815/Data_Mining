@@ -27,10 +27,17 @@ class cross_entropy:
     def forawrd(self, y, sig_out):
         self.y = y.copy()
         self.sig_out = sig_out.copy()
-        self.cee_out = np.mean( - (  (self.y * np.log(self.sig_out) ) + ( (1 - self.y) * np.log(1 - self.sig_out) ) ) )
-        print(self.cee_out)
+        temp = np.where(self.sig_out == 0, 0.000000001, self.sig_out)
+        temp = np.where(temp == 1, 0.999999999, temp)
+        self.cee_out = -(  (self.y * np.log(temp) ) + ( (1 - self.y) * np.log(1 - temp) ) )
         return np.mean(self.cee_out)
-
+    
+        # if type(output) == np.ndarray:
+        # z = []
+        # for idx, out in enumerate(output):
+        #     z_i = -(y[idx] * np.log(out) + (1 - y[idx]) * np.log(1 - out))
+        #     z.append(z_i)
+        # return np.mean(z)
         
     def backward(self):
         return (self.sig_out - self.y) / self.sig_out * (1 - self.sig_out)
@@ -38,7 +45,7 @@ class cross_entropy:
     
 
 class Affine:
-    def __init__(self, w, b, lr = 1):
+    def __init__(self, w, b, lr):
         self.x = None # X = [x1, x2] {nd.array}
         self.w = w.copy() # Weight = [W1, W2] {nd.array}
         self.b = b # bias = {flaot}
@@ -61,35 +68,36 @@ class Affine:
 
 
 class Single_layer_neural_network:
-    def __init__(self, Weight, Bias):
-        self.affine = Affine(Weight, Bias)
+    def __init__(self, Weight, Bias, lr = 1):
+        self.affine = Affine(Weight, Bias, lr)
         self.sigmoid = Sigmoid()
         self.cee = cross_entropy()
-        self.pre_error = float(9999)
         
     def Train(self, X_train, Y_train, epoch = 1000, batch_size = 1000):
         self.log = []
         self.X_train = X_train.copy()
         self.Y_train = Y_train.copy()
         self.batch_size = batch_size
+        prev_err = 9999
         iter = len(X_train) / batch_size
-        for _ in range(epoch):
+        for curr_epoch in range(epoch):
             for i in range(int(iter + 1)):
                 start = batch_size * i 
                 end = batch_size * (i+1)
                 if end > 1000:
                     end = 1000
+                    
+                if start == end:
+                    break
                 #One iter = train every sample form X_train once
                 affine_out = self.affine.forward(self.X_train[start : end]) # W = [W1, W2], B = [B] / X[i] = {np.array}(2,),  -> W * X[i] + B = {float} 
                 sig_out = self.sigmoid.forward(affine_out) # affine_out = {float} -> sig_out = 0 < {float} < 1
-                cee_out = self.cee.forawrd(self.Y_train[start : end], sig_out) # error = - [log(y[p(y)]) + log([1-y][1-p(y)])]
-                self.log.append(cee_out)
-                if self.pre_error - cee_out < 0.0000000000000001:
-                    print(f"pre = {self.pre_error}")
-                    print(f"epoch = {_}, iteration = {i}, early stop")
+                err = self.cee.forawrd(self.Y_train[start : end], sig_out)
+                if (prev_err > err) and (prev_err - err < 0.00001):
+                    print(f"Early Stop at epoch : {curr_epoch}, iteration : {i}")
                     return (self.affine.w, self.affine.b)
-
-                self.pre_error = cee_out
+                prev_err = err
+                self.log.append([err, self.affine.w.copy()])# error = - [log(y[p(y)]) + log([1-y][1-p(y)])]
                 d_error = self.cee.backward() # backporpagation for crossentropy
                 d_sig = self.sigmoid.backward(d_error)# backporpagation for sigmoid
                 self.affine.backward(d_sig)#backporpagation for affine -> update weight and bias
