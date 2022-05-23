@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 import collections
+import seaborn as sns
 
 
 
@@ -16,13 +17,15 @@ def Generate_train_test_data(n_sample):
     train_df1['class'] = 0
     train_df2['class'] = 1
     
+    #transform into daframe
     train = pd.concat([train_df1, train_df2])
     train.reset_index(inplace = True, drop = True)
     train.columns = ["X1", "X2", "class"]
+    #suffle
     train = train.sample(frac = 1).reset_index(drop = True)
     
     
-    #generate test data set
+    #generate test data set also
     test_data1 = np.random.multivariate_normal((1, 0), [[1, 0.75], [0.75, 1]], 200)
     test_data2 = np.random.multivariate_normal((0, 1.5), [[1, 0.75], [0.75, 1]], 200)
     test_df1 = pd.DataFrame(test_data1)
@@ -30,7 +33,6 @@ def Generate_train_test_data(n_sample):
     test_df1['class'] = 0
     test_df2['class'] = 1
     
-    #transform into daframe
     test = pd.concat([test_df1, test_df2])
     test.reset_index(inplace = True, drop = True)
     test.columns = ["X1", "X2", "class"]
@@ -55,14 +57,7 @@ def pre_probablity(y):
         pre_prob[i] = y_count[i] / y.shape[0]
     return pre_prob
 
-
-#calculate mean and var
-#########이 부분 함수가 직관적이지 않고 쓸모없이 길어서
-#########교체 해야할 듯
-####핵심은 class별로 각 attribute의 평균과 분산을 구해줌
-###예를 들어서 class가 0인 데이터들의 X1의 평균은 1,  X2의 평균은 2이며
-###class가 1인 데이터들의 X1의 평균은 2, X2의 평균은 3이라고 할때
-###mean = [[1, 2], [2,3]] 으로 반환해주는 함수
+#mean and var function for simple way
 def mean_var(x, y):
     num_of_feat = x.shape[1]
     #create empty array for store mean and var value
@@ -189,12 +184,19 @@ def Run_myNB(iter = 1, n_sample = 500):
     err_lst = []
     for i in range(iter):
         X_train, Y_train, X_test, Y_test = Generate_train_test_data(n_sample)
-        
         prediction, posterior, err = myNB(X_train, Y_train, X_test, Y_test)
         
         pred_lst.append(prediction)
         post_lst.append(posterior)
         err_lst.append(err)
+        
+    #To draw plot of result    
+        scatter_test=pd.DataFrame(X_test)
+        pre=prediction
+        scatter_test['pre']=pre
+        scatter_test.columns=['x1','x2','prediction']
+    sns.scatterplot(x=scatter_test['x1'], y=scatter_test['x2'], hue=scatter_test['prediction'])
+        
         
     return pred_lst, post_lst, err_lst
 

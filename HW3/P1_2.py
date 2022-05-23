@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import collections
 import math 
+import random
 
 
 #Tranform str type class to int type
@@ -97,7 +98,7 @@ def multi_accu(Y_test, prediction):
     for i in range(len(Y_test)):
         if Y_test[i] == prediction[i]:
             correct += 1
-    return 1 - (correct / len(Y_test))
+    return correct / len(Y_test)
 
 
 #Naive bayes function for multiple class
@@ -128,14 +129,14 @@ def MultiClass_myNB(X_train, Y_train, X_test, Y_test):
 
 
 #fold
-# def cross_validation_split(dataset : pd.DataFrame, n_folds : int):
-#     dataset = list(dataset.values)
-#     dataset_split = []
-#     fold_size = int(len(dataset) / n_folds)
-#     for _ in range(n_folds):
-#         fold = []
-#         while len(fold) < fold_size:
-#             index = randrange(len(dataset))
-#             fold.append(dataset.pop(index))
-#         dataset_split.append(fold)
-#     return dataset_split
+def cross_validation_split(dataset, n_folds):
+    dataset = list(dataset.values)
+    dataset_split = []
+    fold_size = int(len(dataset) / n_folds)
+    for _ in range(n_folds):
+        fold = []
+        while len(fold) < fold_size:
+            index = random.randrange(len(dataset))
+            fold.append(dataset.pop(index))
+        dataset_split.append(fold)
+    return dataset_split
